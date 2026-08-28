@@ -54,7 +54,7 @@ public final class ModuleMain extends XposedModule {
     }
 
     private void installSystemServerHook(ClassLoader classLoader) {
-        hookMatchingMethods(classLoader, "com.android.server.notification.NotificationManagerService", "enqueueTextToast");
+        hookMatchingMethods(classLoader, "com.android.server.notification.NotificationManagerService", "enqueueToast");
     }
 
     private void hookMatchingMethods(ClassLoader classLoader, String className, String methodName) {

@@ -14,7 +14,7 @@
 
 - 目标应用进程：hook `android.widget.Toast.show()`，覆盖普通 Toast 与可提取文本的自定义 Toast。
 - SystemUI：hook `ToastUI.showToast()`，覆盖 Android 11 及以上由系统界面展示的标准文本 Toast。
-- system_server：hook `NotificationManagerService.enqueueTextToast()`，作为系统框架层兜底。
+- system_server：hook `NotificationManagerService.enqueueToast()` 的共享入口，作为系统框架层兜底。
 
 厂商 ROM 可能改名或改写 SystemUI / system_server 方法；目标应用进程 hook 仍可独立工作。
 
