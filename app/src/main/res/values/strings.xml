@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Toast 屏蔽器</string>
+    <string name="module_description">按应用和关键词屏蔽 Toast</string>
+</resources>
