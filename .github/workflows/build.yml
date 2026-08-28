@@ -16,9 +16,11 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
           cache: gradle
       - uses: android-actions/setup-android@v3
+      - name: Install Android SDK 37
+        run: sdkmanager "platforms;android-37" "build-tools;37.0.0"
       - name: Test and build APK
         run: ./gradlew testDebugUnitTest assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
