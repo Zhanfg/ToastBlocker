@@ -4,13 +4,13 @@ plugins {
 
 android {
     namespace = "io.github.zhanfg.toastblocker"
-    compileSdk = 37
-    buildToolsVersion = "37.0.0"
+    compileSdk = 36
+    buildToolsVersion = "36.0.0"
 
     defaultConfig {
         applicationId = "io.github.zhanfg.toastblocker"
         minSdk = 27
-        targetSdk = 37
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
     }
