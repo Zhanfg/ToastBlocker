@@ -55,6 +55,32 @@ jobs:
           echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
 
+      - name: Build legacy Manager persistence module
+        run: |
+          LLVM_BIN="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          CC="$LLVM_BIN/aarch64-linux-android26-clang"
+
+          rm -rf ksunext-build/persist-module-stage
+          mkdir -p ksunext-build/persist-module-stage/bin
+
+          "$CC" -Os -fPIE -pie -Wl,--strip-all             -o ksunext-build/persist-module-stage/bin/claim_manager             ksunext-build/persist-module/claim_manager.c
+
+          cp ksunext-build/persist-module/module.prop ksunext-build/persist-module-stage/
+          cp ksunext-build/persist-module/common.sh ksunext-build/persist-module-stage/
+          cp ksunext-build/persist-module/post-fs-data.sh ksunext-build/persist-module-stage/
+          cp ksunext-build/persist-module/service.sh ksunext-build/persist-module-stage/
+          cp ksunext-build/persist-module/customize.sh ksunext-build/persist-module-stage/
+
+          chmod 0755             ksunext-build/persist-module-stage/bin/claim_manager             ksunext-build/persist-module-stage/common.sh             ksunext-build/persist-module-stage/post-fs-data.sh             ksunext-build/persist-module-stage/service.sh             ksunext-build/persist-module-stage/customize.sh
+
+          file ksunext-build/persist-module-stage/bin/claim_manager
+          mkdir -p out
+          (
+            cd ksunext-build/persist-module-stage
+            zip -9 -r ../../out/KernelSU_Next_Compat_Manager_Persistence_33024-v1.0.0.zip .
+          )
+          unzip -l out/KernelSU_Next_Compat_Manager_Persistence_33024-v1.0.0.zip
+
       - name: Setup Rust
         run: |
           rustup update stable
@@ -105,18 +131,18 @@ jobs:
           chmod +x gradlew
           ./gradlew --no-daemon --stacktrace clean assembleRelease
 
-      - name: Collect APK
+      - name: Collect APK and persistence module
         run: |
           mkdir -p out
           APK="$(find ksunext-build/KernelSU-Next/manager/app/build/outputs/apk/release -type f -name '*.apk' | head -n 1)"
           test -n "$APK"
           cp "$APK" out/KernelSU_Next_Compat_v3.3.0-64_33278-for-33024-arm64-release.apk
-          sha256sum out/*.apk | tee out/SHA256SUMS.txt
+          sha256sum out/*.apk out/*.zip | tee out/SHA256SUMS.txt
 
-      - name: Upload APK
+      - name: Upload APK and persistence module
         uses: actions/upload-artifact@v4
         with:
-          name: KernelSU-Next-Compat-33278-for-33024-arm64
+          name: KernelSU-Next-Compat-33278-for-33024-with-persistence
           path: out/*
           if-no-files-found: error
           retention-days: 14
