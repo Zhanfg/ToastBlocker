@@ -79,7 +79,30 @@ replace(
 '''
 )
 
-# 4) v3.1.0 used u:r:su:s0. The current manager defaults to u:r:ksu:s0.
+# 4) v3.1.0 uses App Profile ABI v2 and SELinux domain u:r:su:s0.
+# The current ABI is v4. The layout stayed prefix-compatible, but explicitly
+# sending version 2 avoids relying on the old kernel accepting a future version.
+replace(
+    "manager/app/src/main/cpp/jni.cc",
+    '''    app_profile profile = {};
+    profile.version = KSU_APP_PROFILE_VER;
+''',
+    '''    app_profile profile = {};
+    profile.version = get_kernel_uapi_version() == 0 ? 2 : KSU_APP_PROFILE_VER;
+'''
+)
+
+replace(
+    "manager/app/src/main/cpp/jni.cc",
+    '''    app_profile p = {};
+    p.version = KSU_APP_PROFILE_VER;
+''',
+    '''    app_profile p = {};
+    p.version = get_kernel_uapi_version() == 0 ? 2 : KSU_APP_PROFILE_VER;
+'''
+)
+
+# v3.1.0 used u:r:su:s0. The current manager defaults to u:r:ksu:s0.
 # Remap only the current-manager default when talking to a pre-UAPI kernel.
 replace(
     "manager/app/src/main/cpp/jni.cc",
