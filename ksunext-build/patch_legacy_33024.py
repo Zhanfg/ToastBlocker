@@ -104,8 +104,8 @@ replace(
     '''const DRIVER_FD_NAME: &str = "anon_inode:[ksu_driver]";
 ''',
     '''pub fn change_manager_uid(appid: u32) -> Result<()> {
-    if !(10000..100000).contains(&appid) {
-        bail!("invalid Android appId: {appid}");
+    if !(10001..20000).contains(&appid) {
+        bail!("legacy toolkit accepts Android appId 10001..19999, got {appid}");
     }
 
     let mut marker: usize = 0;
@@ -229,21 +229,37 @@ replace(
         super.onResume()
 
         if (Natives.isManager || legacyClaimRunning) return
-
-        if (!rootAvailable()) {
-            if (!legacyHintShown) {
-                legacyHintShown = true
-                Toast.makeText(
-                    this,
-                    "请先在旧版 KernelSU Next 中给 KernelSU Next Compat 授予 root，然后返回此应用",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-            return
-        }
-
         legacyClaimRunning = true
+
         lifecycleScope.launch(Dispatchers.IO) {
+            // Force one real su request. Before takeover, the bundled ksud cannot grant
+            // root itself, so the shell builder falls back to the legacy KernelSU su.
+            val hasRoot = runCatching {
+                createRootShell(false).use { shell ->
+                    shell.newJob()
+                        .add("id -u")
+                        .exec()
+                        .out
+                        .firstOrNull()
+                        ?.trim() == "0"
+                }
+            }.getOrDefault(false)
+
+            if (!hasRoot) {
+                withContext(Dispatchers.Main) {
+                    legacyClaimRunning = false
+                    if (!legacyHintShown) {
+                        legacyHintShown = true
+                        Toast.makeText(
+                            this@MainActivity,
+                            "请在旧版 KernelSU Next 的授权弹窗中允许 KernelSU Next Compat 获取 root，然后返回本应用",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+                return@launch
+            }
+
             val appId = android.os.Process.myUid() % 100000
             val claimed = claimManagerAppId(appId)
 
