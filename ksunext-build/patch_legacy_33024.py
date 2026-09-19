@@ -97,13 +97,4 @@ replace(
 '''
 )
 
-# 5) Make the produced build visually identifiable without changing package identity.
-replace(
-    "manager/app/build.gradle.kts",
-    '''        versionName = providers.exec {
-''',
-    '''        versionName = providers.exec {
-'''
-)
-
 print("KernelSU-Next legacy compatibility patches applied successfully.")
