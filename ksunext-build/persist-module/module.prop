@@ -1,0 +1,6 @@
+id=ksunext_compat_persist
+name=KernelSU Next Compat Manager Persistence
+version=1.0.0
+versionCode=100
+author=OpenAI for Zhanfg
+description=Persistently selects com.rifsxd.ksunext.compat33024 as KernelSU Next Manager on legacy 33024 kernels. Disable/remove this module to fall back to the original signed Manager.
