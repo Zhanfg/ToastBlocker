@@ -14,15 +14,12 @@ import android.widget.TextView;
 
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
-
 import io.github.libxposed.service.XposedService;
 
 public final class MainActivity extends Activity implements App.ServiceListener {
     private static final String PREFS = "rules";
     private static final String KEY_PACKAGES = "packages";
     private static final String KEY_KEYWORDS = "keywords";
-    private static final Pattern PACKAGE_NAME = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)+");
 
     private TextView status;
     private EditText packages;
@@ -103,7 +100,7 @@ public final class MainActivity extends Activity implements App.ServiceListener 
             return;
         }
         for (String packageName : packageSet) {
-            if (!PACKAGE_NAME.matcher(packageName).matches()) {
+            if (!PackageNames.isValid(packageName)) {
                 status.setText("无效包名：" + packageName);
                 return;
             }
