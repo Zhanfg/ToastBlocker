@@ -9,7 +9,10 @@ import android.widget.Toast;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import io.github.libxposed.api.XposedModule;
 
@@ -54,7 +57,48 @@ public final class ModuleMain extends XposedModule {
     }
 
     private void installSystemServerHook(ClassLoader classLoader) {
-        hookMatchingMethods(classLoader, "com.android.server.notification.NotificationManagerService", "enqueueToast");
+        try {
+            Class<?> service = Class.forName("com.android.server.notification.NotificationManagerService", false, classLoader);
+            Set<Class<?>> targets = new LinkedHashSet<>();
+            targets.add(service);
+            Collections.addAll(targets, service.getDeclaredClasses());
+            for (Class<?> target : targets) hookEnqueueMethods(target);
+
+            // getDeclaredClasses() omits the anonymous Stub. onStart publishes this Binder.
+            Field binder = service.getDeclaredField("mService");
+            binder.setAccessible(true);
+            hook(service.getDeclaredMethod("onStart")).intercept(chain -> {
+                try {
+                    Class<?> stub = binder.get(chain.getThisObject()).getClass();
+                    if (targets.add(stub)) hookEnqueueMethods(stub);
+                } catch (Throwable error) {
+                    log(Log.WARN, TAG, "Unable to inspect notification Binder", error);
+                }
+                return chain.proceed();
+            });
+        } catch (Throwable error) {
+            log(Log.WARN, TAG, "Unable to inspect NotificationManagerService", error);
+        }
+    }
+
+    private void hookEnqueueMethods(Class<?> type) {
+        try {
+            for (Method method : type.getDeclaredMethods()) {
+                ToastEnqueue enqueue = ToastEnqueue.from(method);
+                if (enqueue == null) continue;
+                hook(method).intercept(chain -> {
+                    try {
+                        CharSequence text = (CharSequence) chain.getArg(enqueue.textIndex());
+                        if (text != null && shouldBlock((String) chain.getArg(0), text)) return enqueue.blockedResult();
+                    } catch (Throwable error) {
+                        log(Log.WARN, TAG, method.getName() + " inspection failed; allowing it", error);
+                    }
+                    return chain.proceed();
+                });
+            }
+        } catch (Throwable error) {
+            log(Log.WARN, TAG, "Unable to hook toast enqueue methods in " + type.getName(), error);
+        }
     }
 
     private void hookMatchingMethods(ClassLoader classLoader, String className, String methodName) {

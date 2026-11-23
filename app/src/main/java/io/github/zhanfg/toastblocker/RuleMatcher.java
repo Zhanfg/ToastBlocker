@@ -37,7 +37,7 @@ final class RuleMatcher {
 
     static List<String> scope(String packages) {
         List<String> result = new ArrayList<>();
-        result.add("android");
+        result.add("system");
         result.add("com.android.systemui");
         result.addAll(lines(packages));
         return result;
