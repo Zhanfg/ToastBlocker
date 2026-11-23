@@ -6,15 +6,15 @@
 
 1. 安装 APK，在 LSPosed 中启用模块。
 2. 打开模块，填写目标应用包名和关键词（每行一个），保存并批准作用域。
-3. 重启目标应用；若启用了 `android` 或 `com.android.systemui` 作用域，需重启对应进程或设备。
+3. 重启目标应用；若启用了 `system` 或 `com.android.systemui` 作用域，需重启对应进程或设备。
 
-匹配规则为区分大小写的文本包含匹配。空规则不会屏蔽任何 Toast。hook 读取或匹配失败时默认放行。
+匹配规则为区分大小写的文本包含匹配。包名或关键词可以清空并保存，任一列表为空时不会屏蔽任何 Toast。hook 读取或匹配失败时默认放行。
 
 ## 覆盖范围
 
 - 目标应用进程：hook `android.widget.Toast.show()`，覆盖普通 Toast 与可提取文本的自定义 Toast。
 - SystemUI：hook `ToastUI.showToast()`，覆盖 Android 11 及以上由系统界面展示的标准文本 Toast。
-- system_server：hook `NotificationManagerService.enqueueToast()` 的共享入口，作为系统框架层兜底。
+- system_server：hook `NotificationManagerService` 及其内部类的 `enqueueToast()` 和 `enqueueTextToast()`，按来源包名和文本匹配。无法取得文本的自定义 Toast 会放行。
 
 厂商 ROM 可能改名或改写 SystemUI / system_server 方法；目标应用进程 hook 仍可独立工作。
 

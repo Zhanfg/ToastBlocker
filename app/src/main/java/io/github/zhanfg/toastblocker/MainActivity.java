@@ -56,7 +56,7 @@ public final class MainActivity extends Activity implements App.ServiceListener 
         save.setOnClickListener(v -> saveRules());
         content.addView(save);
 
-        TextView hint = text("规则保存后会立即供 hook 进程读取。首次使用需在 LSPosed 中批准 android、系统界面和目标应用作用域，然后重启对应进程。", 14);
+        TextView hint = text("规则保存后会立即供 hook 进程读取。首次使用需在 LSPosed 中批准 system、系统界面和目标应用作用域，然后重启对应进程。", 14);
         content.addView(hint);
 
         ScrollView scroll = new ScrollView(this);
@@ -95,10 +95,6 @@ public final class MainActivity extends Activity implements App.ServiceListener 
     private void saveRules() {
         Set<String> packageSet = RuleMatcher.lines(packages.getText().toString());
         Set<String> keywordSet = RuleMatcher.lines(keywords.getText().toString());
-        if (packageSet.isEmpty() || keywordSet.isEmpty()) {
-            status.setText("至少填写一个应用包名和一个关键词");
-            return;
-        }
         for (String packageName : packageSet) {
             if (!PackageNames.isValid(packageName)) {
                 status.setText("无效包名：" + packageName);
